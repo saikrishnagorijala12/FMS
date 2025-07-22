@@ -1,0 +1,4 @@
+.env
+.venv
+./fms/routes/__pycache__/*
+**/__pycache__/

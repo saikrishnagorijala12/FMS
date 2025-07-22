@@ -1,0 +1,160 @@
+<header class="header">
+  <div class="header-content">
+    <div class="logo">🏪 FMS</div>
+    <div class="logo">Franchisor Dashboard</div>
+    <div class="user-info">
+      <span>Welcome, {{ franchisor.name }}</span>
+      <div class="user-avatar dropdown">
+          <div
+            class="rounded-circle profile-avatar dropdown-toggle d-flex justify-content-center align-items-center"
+            id="profileDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            style="cursor: pointer"
+          >
+            {{ franchisor.name.charAt(0) }}
+          </div>
+          <ul
+            class="dropdown-menu dropdown-menu-end profile-dropdown"
+            aria-labelledby="profileDropdown"
+          >
+            <li>
+              <a
+                class="dropdown-item d-flex align-items-center text-danger"
+                (click)="logout()"
+              >
+                <i class="fa fa-sign-out dropdown-icon text-danger"></i>
+                <span>Logout</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <nav class="dashboard-nav">
+    <button class="nav-btn" [class.active]="activeSection === 'applications'" (click)="showSection('applications')">📝
+      Applications</button>
+    <button class="nav-btn" [class.active]="activeSection === 'products'" (click)="showSection('products')">📦
+      Products</button>
+    <button class="nav-btn" [class.active]="activeSection === 'stock'" (click)="showSection('stock')">📈 Stock &
+      Sales</button>
+    <button class="nav-btn" [class.active]="activeSection === 'commission'" (click)="showSection('commission')">💰
+      Commission</button>
+    <button class="nav-btn" [class.active]="activeSection === 'reports'" (click)="showSection('reports')">📊
+      Reports</button>
+    <!-- <button class="nav-btn btn-danger" (click)="logout()">
+      🚪 Logout
+    </button> -->
+  </nav>
+
+  <!-- Applications -->
+  <section *ngIf="activeSection === 'applications'" class="dashboard-section active">
+    <h2 class="section-title">Franchise Applications Management</h2>
+
+    <div class="grid">
+      <div class="card application-card" *ngFor="let app of applications">
+        <h3>Application #{{app.id}}</h3>
+        <p><strong>Applicant:</strong> {{app.applicant}}</p>
+        <p><strong>Region:</strong> {{app.region}}</p>
+        <p><strong>Investment:</strong> ₹{{app.investment}}</p>
+        <p><strong>Experience:</strong> {{app.experience}}</p>
+        <span class="status" [ngClass]="app.status">{{app.status | titlecase}}</span>
+        <div>
+          <button *ngIf="app.status === 'pending'" class="btn btn-success"
+            (click)="approveApplication(app.id)">Approve</button>
+          <button *ngIf="app.status === 'pending'" class="btn btn-danger"
+            (click)="rejectApplication(app.id)">Reject</button>
+          <button class="btn btn-primary" (click)="handleViewAction('View Details')">View Details</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section *ngIf="activeSection === 'products'" class="dashboard-section active">
+    <h2 class="section-title">Product Management</h2>
+
+    <button class="btn btn-success" (click)="addProduct()">Add New Product</button>
+
+    <div class="grid">
+      <div class="card product-card" *ngFor="let prod of products">
+        <h3>{{prod.name}}</h3>
+        <p><strong>Price:</strong> ₹{{prod.price}}</p>
+        <p><strong>Stock:</strong> {{prod.stock}} units</p>
+        <p><strong>Sales:</strong> {{prod.sales}} units this month</p>
+        <div>
+          <button class="btn btn-primary" (click)="handleViewAction('Update Product')">Update</button>
+          <button class="btn btn-warning" (click)="handleViewAction('Edit Price')">Edit Price</button>
+          <button class="btn btn-danger" (click)="handleViewAction('Remove Product')">Remove</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stock -->
+  <section *ngIf="activeSection === 'stock'" class="dashboard-section active">
+    <h2 class="section-title">Stock & Sales Monitoring</h2>
+
+    <div class="grid">
+      <div class="card stock-card" *ngFor="let stock of stockRequests">
+        <h3>Stock Request #{{stock.id}}</h3>
+        <p><strong>Franchise:</strong> {{stock.franchise}}</p>
+        <p><strong>Product:</strong> {{stock.product}}</p>
+        <p><strong>Quantity:</strong> {{stock.quantity}} units</p>
+        <p><strong>Urgency:</strong> {{stock.urgency}}</p>
+        <div>
+          <button class="btn btn-success" (click)="handleViewAction('Approve Stock')">Approve</button>
+          <button class="btn btn-danger" (click)="handleViewAction('Reject Stock')">Reject</button>
+          <button class="btn btn-primary" (click)="handleViewAction('View Stock Details')">View Details</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commission -->
+  <section *ngIf="activeSection === 'commission'" class="dashboard-section active">
+    <h2 class="section-title">Commission Rates & Earnings</h2>
+
+    <div class="form-group">
+      <label for="commissionRate">Commission Rate (%)</label>
+      <input type="number" [(ngModel)]="commissionRate" id="commissionRate" min="0" max="100" />
+    </div>
+
+    <button class="btn btn-primary" (click)="updateCommissionRate()">Update Commission Rate</button>
+  </section>
+
+  <!-- Reports -->
+  <section *ngIf="activeSection === 'reports'" class="dashboard-section active">
+    <h2 class="section-title">Reports & Analytics</h2>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Performance Summary</h3>
+        <p>Top performing franchise: Downtown Location</p>
+        <p>Best selling product: Premium Coffee Blend</p>
+        <p>Average order value: $24.50</p>
+        <button class="btn btn-primary" (click)="handleViewAction('Detailed Report')">View Detailed Report</button>
+      </div>
+
+      <div class="card">
+        <h3>Financial Analytics</h3>
+        <p>Monthly growth: +12.5%</p>
+        <p>Commission collected: $18,817</p>
+        <p>Outstanding payments: $2,145</p>
+        <button class="btn btn-primary" (click)="handleViewAction('Export Financial Report')">Export Financial
+          Report</button>
+      </div>
+
+      <div class="card">
+        <h3>Franchise Health</h3>
+        <p>Active franchises: 12</p>
+        <p>Underperforming: 2</p>
+        <p>Expansion opportunities: 5</p>
+        <button class="btn btn-primary" (click)="handleViewAction('Health Report')">View Health Report</button>
+      </div>
+    </div>
+  </section>
+</div>

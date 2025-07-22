@@ -1,0 +1,91 @@
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
+  <div class="row w-100">
+    <div class="col-md-6 col-lg-4 mx-auto">
+      <div class="card shadow-lg">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary">Welcome Back</h2>
+            <p class="text-muted">Please sign in to your account</p>
+          </div>
+
+          <!-- Angular Template Driven Form -->
+          <form #loginForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email Address</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                [(ngModel)]="email"
+                required
+                email
+                #emailRef="ngModel"
+              />
+              <div class="invalid-feedback d-block" *ngIf="emailRef.invalid && emailRef.touched">
+                Please enter a valid email address.
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group">
+                <input
+                  [type]="passwordVisible ? 'text' : 'password'"
+                  class="form-control"
+                  id="password"
+                  name="password"
+                  [(ngModel)]="password"
+                  required
+                  #passwordRef="ngModel"
+                />
+                <button class="btn btn-outline-secondary" type="button" (click)="togglePassword()">
+                  <i class="bi" [ngClass]="passwordVisible ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="passwordRef.invalid && passwordRef.touched">
+                Please enter your password.
+              </div>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="mb-3 form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="rememberMe"
+                name="rememberMe"
+                [(ngModel)]="rememberMe"
+              />
+              <label class="form-check-label" for="rememberMe">
+                Remember me
+              </label>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg" [disabled]="loginForm.invalid">
+                Sign In
+              </button>
+            </div>
+          </form>
+
+          <!-- Forgot Password -->
+          <div class="text-center mt-3">
+            <a routerLink="/forgot" class="text-decoration-none">Forgot your password?</a>
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- Sign Up -->
+          <div class="text-center">
+            <p class="text-muted">Don't have an account?</p>
+            <a routerLink="/register" class="btn btn-outline-primary">Create Account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

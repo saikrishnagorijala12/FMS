@@ -1,0 +1,18 @@
+
+Roles List
+1: Admin
+2: Customer
+3: Franchisor
+4: Franchisee
+
+
+Status List
+1: pending
+2: approved
+3: rejected
+4: processing
+5: shipped
+6: delivered
+7: completed
+8: failed
+9: paid

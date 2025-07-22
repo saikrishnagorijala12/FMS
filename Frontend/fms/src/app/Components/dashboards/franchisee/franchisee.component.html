@@ -1,0 +1,157 @@
+
+<header class="header">
+  <div class="header-content">
+    <div class="logo">🏪 FMS</div>
+    <div class="logo">Franchise Dashboard</div>
+    <div class="user-info">
+        <span>Welcome, {{ franchisee.name }}</span>
+        <div class="user-avatar dropdown">
+          <div
+            class="rounded-circle profile-avatar dropdown-toggle d-flex justify-content-center align-items-center"
+            id="profileDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            style="cursor: pointer"
+          >
+            {{ franchisee.name.charAt(0) }}
+          </div>
+          <ul
+            class="dropdown-menu dropdown-menu-end profile-dropdown"
+            aria-labelledby="profileDropdown"
+          >
+            <li>
+              <a
+                class="dropdown-item d-flex align-items-center text-danger"
+                (click)="logout()"
+              >
+                <i class="fa fa-sign-out dropdown-icon text-danger"></i>
+                <span>Logout</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+      </div>
+  </div>
+  
+</header>
+
+<div class="container">
+  <nav class="dashboard-nav">
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'inventory'" 
+      (click)="showSection('inventory')"
+    >📦 Manage Inventory</button>
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'orders'" 
+      (click)="showSection('orders')"
+    >🛒 Customer Orders</button>
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'sales'" 
+      (click)="showSection('sales')"
+    >💰 Sales & Revenue</button>
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'commission'" 
+      (click)="showSection('commission')"
+    >👥 Pay Commissions</button>
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'analytics'" 
+      (click)="showSection('analytics')"
+    >📊 Analytics</button>
+    <button 
+      class="nav-btn" 
+      [class.active]="activeSection === 'apply'" 
+      (click)="showSection('apply')"
+    >📝 Apply for Franchise</button>
+
+  </nav>
+
+
+  <!-- Inventory Section -->
+  <section *ngIf="activeSection === 'inventory'" class="dashboard-section active">
+    <h2 class="section-title">Manage Inventory & Stock Requests</h2>
+    <div class="grid">
+      <div class="card" *ngFor="let product of inventory">
+        <h3>{{product.name}}</h3>
+        <p>Stock Level: <strong>{{product.stock}}</strong></p>
+        <button class="btn btn-primary" (click)="requestStock(product.name)">Request More Stock</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Orders Section -->
+  <section *ngIf="activeSection === 'orders'" class="dashboard-section active">
+    <h2 class="section-title">Process Customer Orders</h2>
+    <div class="grid">
+      <div class="card" *ngFor="let order of orders">
+        <h3>{{order.title}}</h3>
+        <p>Status: <strong>{{order.status}}</strong></p>
+        <button class="btn btn-primary" (click)="updateOrderStatus(order)">
+          {{ order.status === 'Delivered' ? 'View Details' : 'Update Status' }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sales Section -->
+  <section *ngIf="activeSection === 'sales'" class="dashboard-section active">
+    <h2 class="section-title">Sales & Revenue Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">{{sales.totalSales | currency:'INR':'₹'  }}</div>
+        <div class="stat-label">Total Sales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{sales.totalRevenue  | currency:'INR':'₹' }}</div>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{sales.commissionPaid | currency:'INR':'₹'}}</div>
+        <div class="stat-label">Commission Paid</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{sales.withdrawnEarnings | currency:'INR':'₹' }}</div>
+        <div class="stat-label">Withdrawn Earnings</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commission Section -->
+  <section *ngIf="activeSection === 'commission'" class="dashboard-section active">
+    <h2 class="section-title">Pay Commissions to Franchisor</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">{{sales.commissionPaid | currency:'INR':'₹'}}</div>
+        <div class="stat-label">Commission Paid</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{unPaidCommissions | currency:'INR':'₹'}}</div>
+        <div class="stat-label">Commission Pending</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="payCommission()">Pay Now</button>
+  </section>
+
+  <!-- Analytics Section -->
+  <section *ngIf="activeSection === 'analytics'" class="dashboard-section active">
+    <h2 class="section-title">Analytics Dashboard</h2>
+    <p>Visuals and financial reports will be shown here.</p>
+  </section>
+
+  <!-- Apply for Franchise Section -->
+  <section *ngIf="activeSection === 'apply'" class="dashboard-section active">
+    <h2 class="section-title">Apply to Own a Franchise</h2>
+    <form (ngSubmit)="submitApplication()">
+      <div>
+        <label for="region">Desired Region:</label>
+        <input type="text" id="region" [(ngModel)]="application.region" name="region">
+      </div>
+      <button class="btn btn-primary" type="submit">Submit Application</button>
+    </form>
+  </section>
+</div>
