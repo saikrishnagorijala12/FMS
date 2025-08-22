@@ -1,0 +1,523 @@
+<div class="app">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">🏪 FMS</div>
+      <div class="logo">Customer Dashboard</div>
+      <div class="user-info">
+        <span>Welcome, {{ customer.name }}</span>
+
+        <div class="user-avatar dropdown">
+          <div
+            class="rounded-circle profile-avatar dropdown-toggle d-flex justify-content-center align-items-center"
+            id="profileDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            style="cursor: pointer"
+          >
+            {{ customer.name.charAt(0) }}
+          </div>
+          <ul
+            class="dropdown-menu dropdown-menu-end profile-dropdown"
+            aria-labelledby="profileDropdown"
+          >
+            <li>
+              <a
+                class="dropdown-item d-flex align-items-center text-danger"
+                (click)="logout()"
+              >
+                <i class="fa fa-sign-out dropdown-icon text-danger"></i>
+                <span>Logout</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="dashboard-nav">
+      <button
+        class="nav-btn"
+        [class.active]="activeSection() === 'locations'"
+        (click)="setActiveSection('locations')"
+      >
+        📍 Locations
+      </button>
+      <button
+        class="nav-btn"
+        [class.active]="activeSection() === 'products'"
+        (click)="setActiveSection('products')"
+      >
+        🛍️ Products
+      </button>
+
+      <button
+        class="nav-btn"
+        [class.active]="activeSection() === 'cart'"
+        (click)="setActiveSection('cart')"
+      >
+        🛒 Cart ({{ cartService.getItems().length }})
+      </button>
+
+      <button
+        class="nav-btn"
+        [class.active]="activeSection() === 'orders'"
+        (click)="setActiveSection('orders')"
+      >
+        📦 Orders
+      </button>
+      <button
+        class="nav-btn"
+        [class.active]="activeSection() === 'profile'"
+        (click)="setActiveSection('profile')"
+      >
+        👤 Profile
+      </button>
+    </nav>
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Locations Section -->
+    <section
+      class="dashboard-section"
+      [class.active]="activeSection() === 'locations'"
+    >
+      <h2 class="section-title">Browse Franchise Locations</h2>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by Name, city, or state.."
+          [(ngModel)]="locationSearchTerm"
+          (keyup.enter)="searchLocations(locationSearchTerm)"
+        />
+        <button
+          class="search-btn"
+          (click)="searchLocations(locationSearchTerm)"
+        >
+          🔍 Search
+        </button>
+      </div>
+      
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedState"
+          (change)="applyLocationFilters()"
+        >
+          <option value="">All States</option>
+          <option *ngFor="let state of states" [value]="state">
+            {{ state }}
+          </option>
+        </select>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedService"
+          (change)="applyLocationFilters()"
+        >
+          <option value="">All Services</option>
+          <option value="Dining">Dining Available</option>
+          <option value="Delivery">Delivery Available</option>
+          <option value="Pickup">Pickup Available</option>
+          <option value="Catering">Catering Available</option>
+        </select>
+      </div>
+
+      <!-- Locations Grid -->
+      <!-- Selected Location Display -->
+      <div
+        class="selected-location-card card"
+        *ngIf="preferredLocation; else noLocationSelected"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div>
+            <h4 style="margin-bottom: 0.25rem">Selected Location</h4>
+            <p style="margin: 0; font-weight: bold">
+              {{ preferredLocation.name }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem; color: #666">
+              📍 {{ preferredLocation.address }}
+            </p>
+          </div>
+          <button class="btn btn-secondary" (click)="clearPreferredLocation()">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- No location selected state -->
+      <ng-template #noLocationSelected>
+        <div class="empty-state">
+          <p>No location selected</p>
+          <button
+            class="btn btn-primary"
+            (click)="preferredLocationDialog = true"
+          >
+            Choose Location
+          </button>
+        </div>
+      </ng-template>
+
+      <hr style="margin: 1.5rem 0" />
+
+      <!-- Other Available Locations -->
+      <div>
+        <h4>Other Available Locations</h4>
+        <div class="grid">
+          <div
+            class="card location-card"
+            *ngFor="let location of filteredLocations"
+            [hidden]="preferredLocation?.id === location.id"
+          >
+            <h4>{{ location.name }}</h4>
+            <p>{{ location.address }}</p>
+            <div class="grid">
+              <button class="btn btn-primary" (click)="openDialog(location)">
+                View Details
+              </button>
+              <button
+                class="btn btn-dark"
+                (click)="setPreferredLocation(location)"
+              >
+                Select
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="dialog-overlay"
+        *ngIf="selectedLocation"
+        (click)="closeDialog()"
+      >
+        <div class="dialog-box" (click)="$event.stopPropagation()">
+          <div class="dialog-header">
+            <h4>{{ selectedLocation.name }}</h4>
+            <button class="close-btn" (click)="closeDialog()">&times;</button>
+          </div>
+
+          <div class="dialog-content">
+            <p>📍 {{ selectedLocation.address }}</p>
+            <p>📞 {{ selectedLocation.phone }}</p>
+            <p>🕒 {{ selectedLocation.hours }}</p>
+            <p>✅ {{ selectedLocation.services.join(" • ") }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products Section -->
+    <section
+      class="dashboard-section"
+      [class.active]="activeSection() === 'products'"
+    >
+      <h2 class="section-title">Search & Purchase Products</h2>
+
+      <div class="search-bar">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search products..."
+          [(ngModel)]="productSearchTerm"
+          (keyup.enter)="searchProducts(productSearchTerm)"
+        />
+        <button class="search-btn" (click)="searchProducts(productSearchTerm)">
+          🔍 Search
+        </button>
+      </div>
+
+      <div class="filter-bar">
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedCategory"
+          (change)="applyFilters()"
+        >
+          <option value="">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">
+            {{ cat }}
+          </option>
+        </select>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedPriceRange"
+          (change)="applyFilters()"
+        >
+          <option value="">Price Range</option>
+          <option value="0-10">₹0 - ₹10</option>
+          <option value="10-25">₹10 - ₹25</option>
+          <option value="25-50">₹25 - ₹50</option>
+          <option value="50+">₹50+</option>
+        </select>
+      </div>
+      <div class="grid">
+        <div class="card product-card" *ngFor="let product of filteredProducts">
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description }}</p>
+          <p class="price">₹{{ product.price }}</p>
+          <p>⭐ {{ product.rating }}/5 ({{ product.reviews }} reviews)</p>
+          <button class="btn btn-success" (click)="openProductDialog(product)">
+            Add to Cart
+          </button>
+        </div>
+      </div>
+      <div
+        class="dialog-overlay"
+        *ngIf="selectedProduct"
+        (click)="closeProductDialog()"
+      >
+        <div class="dialog-box" (click)="$event.stopPropagation()">
+          <div class="dialog-header">
+            <h4>{{ selectedProduct.name }}</h4>
+            <button class="close-btn" (click)="closeProductDialog()">
+              &times;
+            </button>
+          </div>
+
+          <div class="dialog-content">
+            <p>{{ selectedProduct.description }}</p>
+            <p>Unit Price: ₹{{ selectedProduct.price }}</p>
+
+            <div class="quantity-section">
+              <label>Quantity:</label>
+              <input
+                type="number"
+                [(ngModel)]="productQuantity"
+                min="1"
+                class="qty-input"
+              />
+            </div>
+
+            <p class="total">
+              Total: ₹{{ productQuantity * selectedProduct.price }}
+            </p>
+
+            <div class="dialog-actions">
+              <button class="btn btn-primary" (click)="confirmAddToCart()">
+                Confirm
+              </button>
+              <button class="btn btn-secondary" (click)="closeProductDialog()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cart Section -->
+    <section
+      class="dashboard-section"
+      [class.active]="activeSection() === 'cart'"
+    >
+      <h2 class="section-title">Your Cart</h2>
+
+      <div class="grid">
+        <div class="card cart-card" *ngFor="let item of cartService.getItems()">
+          <h3>{{ item.name }}</h3>
+          <p>Price: ₹{{ item.price }}</p>
+          <p>Quantity: {{ item.quantity }}</p>
+          <p>Subtotal: ₹{{ item.price * item.quantity }}</p>
+          <button class="btn btn-danger" (click)="removeFromCart(item.id)">
+            Remove
+          </button>
+        </div>
+      </div>
+
+      <div class="cart-summary" *ngIf="cartService.getItems().length">
+        <h3>Total: ₹{{ cartService.getTotal() }}</h3>
+        <button class="btn btn-primary" (click)="checkout()">Checkout</button>
+        <button class="btn btn-secondary" (click)="clearCart()">
+          Clear Cart
+        </button>
+      </div>
+    </section>
+
+    <!-- Orders Section -->
+    <section
+      class="dashboard-section"
+      [class.active]="activeSection() === 'orders'"
+    >
+      <h2 class="section-title">Track Order Status</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ orderStats().total }}</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ orderStats().active }}</div>
+          <div class="stat-label">Active Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">₹{{ orderStats().totalSpent }}</div>
+          <div class="stat-label">Total Spent</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedOrderStatus"
+          (change)="applyOrderFilters()"
+        >
+          <option value="">All Orders</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+        </select>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedTimeRange"
+          (change)="applyOrderFilters()"
+        >
+          <option value="">Last 30 Days</option>
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
+      </div>
+
+      <div class="grid">
+        <div class="card order-card" *ngFor="let order of filteredOrders">
+          <h3>Order #{{ order.id }}</h3>
+          <p>📅 {{ order.date }}</p>
+          <p>🛍️ {{ order.items }}</p>
+          <p>💰 Total: ₹{{ order.total }}</p>
+          <p>📍 {{ order.location }}</p>
+          <span class="status" [ngClass]="order.status">{{
+            order.status | titlecase
+          }}</span>
+          <button class="btn btn-primary" (click)="trackOrder(order)">
+            {{ order.status === "delivered" ? "Reorder" : "Track Order" }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile Section -->
+    <section
+      class="dashboard-section"
+      [class.active]="activeSection() === 'profile'"
+    >
+      <h2 class="section-title">Manage Profile & Order History</h2>
+
+      <div class="profile-form">
+        <div class="form-group">
+          <label for="firstName">Full Name</label>
+          <input type="text" id="firstName" [(ngModel)]="customer.name" />
+        </div>
+
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" [(ngModel)]="customer.email" />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" [(ngModel)]="customer.phone_no" />
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address</label>
+          <textarea
+            id="address"
+            rows="3"
+            [(ngModel)]="customer.address"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="locationSelect">Preferred Location</label>
+          <select
+            id="locationSelect"
+            [(ngModel)]="selectedLocationId"
+            (change)="onLocationChange($event)"
+          >
+            <option *ngFor="let loc of locations" [value]="loc.id">
+              {{ loc.name }} - {{ loc.state }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="preferences">Dietary Preferences</label>
+          <select id="preferences" [(ngModel)]="customer.preferences">
+            <option value="">No Restrictions</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+            <option value="gluten-free">Gluten-Free</option>
+            <option value="dairy-free">Dairy-Free</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="customer.emailNotifications" />
+            Email notifications for orders
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="customer.smsNotifications" />
+            SMS notifications for delivery
+          </label>
+        </div>
+
+        <button class="btn btn-primary" (click)="updateProfile()">
+          Update Profile
+        </button>
+      </div>
+    </section>
+
+    <div class="dialog-overlay" *ngIf="preferredLocationDialog">
+      <div
+        class="dialog-box location-dialog"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Header -->
+        <div class="dialog-header">
+          <h4>Select Your Preferred Location</h4>
+          <button class="close-btn" (click)="preferredLocationDialog = false">
+            &times;
+          </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="dialog-content location-list">
+          <div *ngFor="let loc of locations" class="location-item">
+            <div class="location-info">
+              <strong>{{ loc.name }}</strong>
+              <p class="location-address">{{ loc.address }}</p>
+            </div>
+            <button class="btn btn-primary" (click)="setPreferredLocation(loc)">
+              Select
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

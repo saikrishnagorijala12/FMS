@@ -15,7 +15,8 @@ def fetch_prefernce(customer_id):
         'customer_id': prefs.customer_id,
         'preferences': prefs.preferences,
         'emailNotifications': prefs.email_notifications,
-        'smsNotifications': prefs.sms_notifications
+        'smsNotifications': prefs.sms_notifications,
+        'preferredLocationId':prefs.preferred_loc
     }, 200
 
 
@@ -30,6 +31,7 @@ def update_preference(customer_id, data):
     prefs.preferences = data.get('preferences', prefs.preferences)
     prefs.email_notifications = data.get('emailNotifications', prefs.email_notifications)
     prefs.sms_notifications = data.get('smsNotifications', prefs.sms_notifications)
+    prefs.preferred_loc = data.get('preferred_loc', prefs.preferred_loc)
 
     db.session.add(prefs)
     db.session.commit()
@@ -39,5 +41,6 @@ def update_preference(customer_id, data):
         'customer_id': prefs.customer_id,
         'preferences': prefs.preferences,
         'emailNotifications': prefs.email_notifications,
-        'smsNotifications': prefs.sms_notifications
+        'smsNotifications': prefs.sms_notifications,
+        'preferred_Loc':prefs.preferred_loc
     }, 200

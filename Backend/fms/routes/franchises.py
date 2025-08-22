@@ -38,12 +38,12 @@ def update_franchise(franchise_id):
     data = request.json
     return f.update_franchise(franchise_id, data)
 
-# Update franchise status
-@franchises_bp.route('/<int:franchise_id>/status', methods=['PUT'])
+# Update franchise Application status
+@franchises_bp.route('/<int:application_id>/status', methods=['PUT'])
 @jwt_required()
-def update_franchise_status(franchise_id):
+def update_franchise_status(application_id):
     data = request.json
-    return f.update_status(franchise_id, data.get("status_id"))
+    return f.update_status(application_id, data)
 
 # Get franchisee's own franchise
 @franchises_bp.route('/my-franchise', methods=['GET'])

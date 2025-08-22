@@ -1,103 +1,146 @@
-<div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
-    <div class="row w-100">
-        <div class="col-md-8 col-lg-6 mx-auto">
-            <div class="card shadow-lg">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-primary">Create Account</h2>
-                        <p class="text-muted">Join us today and get started</p>
-                    </div>
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="row w-100">
+    <div class="col-md-8 col-lg-6 mx-auto">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4 p-md-5 scrollable-form">
 
-                    <form #registerForm="ngForm" (ngSubmit)="onSubmit(registerForm)">
-                        <div class="row">
+          <!-- Header -->
+          <div class="text-center mb-4">
+            <h2 class="fw-bold text-gradient">Create Account</h2>
+            <p class="text-muted">Join us today and get started 🚀</p>
+          </div>
 
+          <!-- Form -->
+          <form #registerForm="ngForm" (ngSubmit)="onSubmit(registerForm)" novalidate>
+            <div class="row gy-3">
 
-                            <div class="mb-3">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" class="form-control" name="firstName" [(ngModel)]="user.firstName"
-                                    required />
-                            </div>
+              <!-- Full Name -->
+              <div class="col-12">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control form-control-lg"
+                  name="firstName" [(ngModel)]="user.firstName" required />
+              </div>
 
+              <!-- Email -->
+              <div class="col-12">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control form-control-lg"
+                  name="email" [(ngModel)]="user.email" required email />
+              </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" class="form-control" name="email" [(ngModel)]="user.email" required
-                                    email />
-                            </div>
+              <!-- Phone -->
+              <div class="col-12">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-control form-control-lg"
+                  name="telephone" [(ngModel)]="user.phone" required />
+              </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" name="telephone" [(ngModel)]="user.phone"
-                                    required />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <div class="input-group">
-                                    <input [type]="passwordVisible ? 'text' : 'password'" class="form-control"
-                                        name="password" [(ngModel)]="user.password" required minlength="8" />
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        (click)="togglePasswordVisibility()">
-                                        <i class="bi" [ngClass]="passwordVisible ? 'Hide' : 'Show'"></i>
-                                    </button>
-                                </div>
-                                <div class="form-text">At least 8 characters, including uppercase, lowercase and
-                                    numbers.</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Confirm Password</label>
-                                <div class="input-group">
-                                    <input [type]="confirmPasswordVisible ? 'text' : 'password'" class="form-control"
-                                        name="confirmPassword" [(ngModel)]="user.confirmPassword" required />
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        (click)="toggleConfirmPasswordVisibility()">
-                                        <i class="bi" [ngClass]="confirmPasswordVisible ? 'Hide' : 'Show'"></i>
-                                    </button>
-                                </div>
-                                <div *ngIf="user.password !== user.confirmPassword && registerForm.submitted"
-                                    class="text-danger">
-                                    Passwords do not match.
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Select Role</label>
-                                <select class="form-select" id="role" name="role" [(ngModel)]="user.role" required>
-                                    <option value="" disabled selected>Select your role</option>
-                                    <option value="customer">Customer</option>
-                                    <option value="franchisor">Franchisor</option>
-                                    <option value="franchisee">Franchisee</option>
-                                </select>
-                                <div class="invalid-feedback" *ngIf="!user.role">
-                                    Please select a role.
-                                </div>
-                            </div>
-
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" name="agreeTerms"
-                                    [(ngModel)]="user.agreeTerms" required id="agreeTerms" />
-                                <label class="form-check-label" for="agreeTerms">
-                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and
-                                    <a href="#" class="text-decoration-none">Privacy Policy</a>
-                                </label>
-                            </div>
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg" [disabled]="registerForm.invalid">
-                                    Create Account
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <hr class="my-4" />
-                    <div class="text-center">
-                        <p class="text-muted">Already have an account?</p>
-                        <a routerLink="/login" class="btn btn-outline-primary">Sign In</a>
-                    </div>
+              <!-- Password -->
+              <div class="col-12">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                  <input [type]="passwordVisible ? 'text' : 'password'" 
+                         class="form-control form-control-lg"
+                         name="password" [(ngModel)]="user.password"
+                         required minlength="8" />
+                  <button class="btn btn-outline-secondary" type="button"
+                          (click)="togglePasswordVisibility()">
+                    <i class="bi" [ngClass]="passwordVisible ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
                 </div>
+                 <ul class="list-unstyled small">
+              <li [class.text-success]="passwordCriteria.length" [class.text-danger]="!passwordCriteria.length">
+                <i class="bi" [ngClass]="passwordCriteria.length ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                At least 8 characters
+              </li>
+              <li [class.text-success]="passwordCriteria.uppercase" [class.text-danger]="!passwordCriteria.uppercase">
+                <i class="bi" [ngClass]="passwordCriteria.uppercase ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                At least 1 uppercase letter
+              </li>
+              <li [class.text-success]="passwordCriteria.lowercase" [class.text-danger]="!passwordCriteria.lowercase">
+                <i class="bi" [ngClass]="passwordCriteria.lowercase ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                At least 1 lowercase letter
+              </li>
+              <li [class.text-success]="passwordCriteria.number" [class.text-danger]="!passwordCriteria.number">
+                <i class="bi" [ngClass]="passwordCriteria.number ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                At least 1 number
+              </li>
+              <li [class.text-success]="passwordCriteria.special" [class.text-danger]="!passwordCriteria.special">
+                <i class="bi" [ngClass]="passwordCriteria.special ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                At least 1 special character
+              </li>
+            </ul>
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="col-12">
+                <label class="form-label">Confirm Password</label>
+                <div class="input-group">
+                  <input [type]="confirmPasswordVisible ? 'text' : 'password'"
+                         class="form-control form-control-lg"
+                         name="confirmPassword" [(ngModel)]="user.confirmPassword" required />
+                  <button class="btn btn-outline-secondary" type="button"
+                          (click)="toggleConfirmPasswordVisibility()">
+                    <i class="bi" [ngClass]="confirmPasswordVisible ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
+                <div *ngIf="user.password !== user.confirmPassword && registerForm.submitted"
+                     class="text-danger small mt-1">
+                  Passwords do not match.
+                </div>
+              </div>
+
+              <!-- Role Selection -->
+              <div class="col-12">
+                <label for="role" class="form-label">Select Role</label>
+                <select class="form-select form-select-lg"
+                        id="role" name="role" [(ngModel)]="user.role"
+                        #roleCtrl="ngModel" required
+                        [class.is-invalid]="roleCtrl.invalid && roleCtrl.touched">
+                  <option value="" disabled>Select your role</option>
+                  <option value="customer">Customer</option>
+                  <option value="franchisor">Franchisor</option>
+                  <option value="franchisee">Franchisee</option>
+                </select>
+                <div class="invalid-feedback">
+                  Please select a role.
+                </div>
+              </div>
+
+              <!-- Terms -->
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                         name="agreeTerms" [(ngModel)]="user.agreeTerms" required id="agreeTerms" />
+                  <label class="form-check-label" for="agreeTerms">
+                    I agree to the <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Submit -->
+              <div class="col-12 d-grid">
+                <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg rounded-pill" [disabled]="registerForm.invalid">
+                Create Account
+              </button>
             </div>
+               
+              </div>
+
+            </div>
+          </form>
+
+          <hr class="my-4" />
+
+          <!-- Already have account -->
+          <div class="text-center">
+            <p class="text-muted mb-2">Already have an account?</p>
+            <a routerLink="/login" class="btn btn-outline-primary btn-lg">Sign In</a>
+          </div>
+
         </div>
+      </div>
     </div>
+  </div>
 </div>

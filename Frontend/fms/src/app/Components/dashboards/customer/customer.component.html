@@ -1,317 +1,450 @@
-<div class="app">
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">🏪 FMS</div>
-      <div class="logo">Customer Dashboard</div>
-      <div class="user-info">
-        <span>Welcome, {{ customer.name }}</span>
+<div class="app d-flex flex-column vh-100">
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center">
+                🏪 <span class="ms-2">FMS - Customer Dashboard</span>
+            </a>
 
-        <div class="user-avatar dropdown">
-          <div class="rounded-circle profile-avatar dropdown-toggle d-flex justify-content-center align-items-center"
-            id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer">
-            {{ customer.name.charAt(0) }}
-          </div>
-          <ul class="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileDropdown">
-            <li>
-              <a class="dropdown-item d-flex align-items-center text-danger" (click)="logout()">
-                <i class="fa fa-sign-out dropdown-icon text-danger"></i>
-                <span>Logout</span>
-              </a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">Welcome,  {{ shortName }}</span>
+
+                <!-- User Dropdown -->
+                <div class="dropdown" (click)="toggleDropdown()" [class.open]="dropdownOpen">
+                    <!-- Avatar Button -->
+                    <button type="button" class="btn btn-outline-light rounded-circle">
+                        {{ customer.name.charAt(0) }}
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <ul class="dropdown-menu dropdown-menu-end" *ngIf="dropdownOpen">
+                        <li>
+                            <span class="status" [ngClass]="customer.name">
+                        Full Name : {{ customer.name | titlecase }}
+                    </span>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item text-danger d-flex align-items-center" (click)="logout()">
+                                <i class="fa fa-sign-out me-2 text-danger"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body -->
+    <div class="container-fluid pad flex-grow-1 d-flex flex-column py-3">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills justify-content-center mb-4">
+            <li class="nav-item">
+                <button class="nav-link" [class.active]="activeSection() === 'locations'"
+                    (click)="setActiveSection('locations')">
+                    📍 Locations
+                </button>
             </li>
-          </ul>
+            <li class="nav-item">
+                <button class="nav-link" [class.active]="activeSection() === 'products'"
+                    (click)="setActiveSection('products')">
+                    🛍️ Products
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" [class.active]="activeSection() === 'cart'" (click)="setActiveSection('cart')">
+                    🛒 Cart ({{ cartService.getItems().length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" [class.active]="activeSection() === 'orders'"
+                    (click)="setActiveSection('orders')">
+                    📦 Orders
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" [class.active]="activeSection() === 'profile'"
+                    (click)="setActiveSection('profile')">
+                    👤 Profile
+                </button>
+            </li>
+        </ul>
+
+        <!-- Alert Messages -->
+        <div *ngIf="successMessage" class="alert alert-success text-center">
+            {{ successMessage }}
         </div>
-      </div>
+        <div *ngIf="errorMessage" class="alert alert-danger text-center">
+            {{ errorMessage }}
+        </div>
+
+        <!-- Locations Section -->
+        <section class="dashboard-section" [class.active]="activeSection() === 'locations'">
+            <h2 class="section-title">Browse Franchise Locations</h2>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search by Name, City, or State..."
+                    [(ngModel)]="locationSearchTerm" (keyup.enter)="searchLocations(locationSearchTerm)" />
+                <button class="search-btn rounded-pill" (click)="searchLocations(locationSearchTerm)">🔍 Search</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+
+                <select class="filter-select me-2" [(ngModel)]="selectedState" (change)="applyLocationFilters()">
+                    <option value="">All States</option>
+                    <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+                </select>
+
+                <select class="filter-select" [(ngModel)]="selectedService" (change)="applyLocationFilters()">
+                    <option value="">All Services</option>
+                    <option value="Dining">Dining Available</option>
+                    <option value="Delivery">Delivery Available</option>
+                    <option value="Pickup">Pickup Available</option>
+                    <option value="Catering">Catering Available</option>
+                </select>
+            </div>
+
+
+            <!-- Selected Location -->
+            <div *ngIf="preferredLocation; else noLocationSelected" class="selected-location-card card">
+                <div class="selected-location-content">
+                    <div>
+                        <h4 class="mb-1">Selected Location</h4>
+                        <p class="location-name">{{ preferredLocation.name }}</p>
+                        <p class="location-address">📍 {{ preferredLocation.address }}</p>
+                    </div>
+                    <button class="btn btn-secondary rounded-pill" (click)="clearPreferredLocation()">Clear</button>
+                </div>
+            </div>
+
+            <!-- No location selected -->
+            <ng-template #noLocationSelected>
+                <div class="empty-state text-center">
+                    <p>No location selected</p>
+                    <button class="btn btn-primary rounded-pill" (click)="preferredLocationDialog = true">Choose Location</button>
+                </div>
+            </ng-template>
+
+            <hr class="section-divider" />
+
+            <!-- Other Available Locations -->
+            <div col-md-5>
+                <h4>Other Available Locations</h4>
+                <div class="grid location-grid col-md-12">
+                    <div class="card location-card" *ngFor="let location of filteredLocations"
+                        [hidden]="preferredLocation?.id === location.id">
+                        <h4>{{ location.name }}</h4>
+                        <p>{{ location.address }}</p>
+                        <div class="card-actions grid gap-2">
+                            <button class="btn btn-primary rounded-pill" style="width: auto; max-width: 100%" (click)="openDialog(location)">View Details</button>
+                            <button class="btn btn-secondary rounded-pill" style="width: auto ; max-width: 100%" (click)="setPreferredLocation(location)">Select</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Details Dialog -->
+            <div class="dialog-overlay" *ngIf="selectedLocation" (click)="closeDialog()">
+                <div class="dialog-box" (click)="$event.stopPropagation()">
+                    <div class="dialog-header">
+                        <h4>{{ selectedLocation.name }}</h4>
+                        <button class="close-btn rounded-pill" (click)="closeDialog()">&times;</button>
+                    </div>
+                    <div class="dialog-content">
+                        <p>📍 {{ selectedLocation.address }}</p>
+                        <p>📞 {{ selectedLocation.phone }}</p>
+                        <p>🕒 {{ selectedLocation.hours }}</p>
+                        <p>✅ {{ selectedLocation.services.join(' • ') }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Preferred Location Dialog -->
+        <div class="modal fade show d-block" *ngIf="preferredLocationDialog" (click)="preferredLocationDialog = false">
+            <div class="modal-dialog modal-dialog-scrollable" (click)="$event.stopPropagation()">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Select Your Preferred Location</h5>
+                        <button type="button rounded-pill" class="btn-close" (click)="preferredLocationDialog = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div *ngFor="let loc of locations"
+                            class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ loc.name }}</strong>
+                                <p class="mb-0 text-muted">{{ loc.address }}</p>
+                            </div>
+                            <button class="btn btn-sm btn-primary rounded-pill" (click)="setPreferredLocation(loc)">
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Section -->
+        <section class="dashboard-section" [class.active]="activeSection() === 'products'">
+            <h2 class="section-title">Search & Purchase Products</h2>
+
+            <!-- 🔍 Search Bar -->
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search products..." [(ngModel)]="productSearchTerm"
+                    (keyup.enter)="searchProducts(productSearchTerm)" />
+                <button class="search-btn rounded-pill" (click)="searchProducts(productSearchTerm)">
+                    🔍 Search
+                </button>
+            </div>
+
+            <!-- ⛩️ Filters -->
+            <div class="filter-bar">
+                <select class="filter-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
+                    <option value="">All Categories</option>
+                    <option *ngFor="let cat of categories" [value]="cat">
+                        {{ cat }}
+                    </option>
+                </select>
+
+                <select class="filter-select" [(ngModel)]="selectedPriceRange" (change)="applyFilters()">
+                    <option value="">Price Range</option>
+                    <option value="0-10">₹0 - ₹10</option>
+                    <option value="10-25">₹10 - ₹25</option>
+                    <option value="25-50">₹25 - ₹50</option>
+                    <option value="50+">₹50+</option>
+                </select>
+            </div>
+
+            <!-- 🛒 Products Grid -->
+            <div *ngIf="filteredProducts.length > 0; else noProducts">
+                <div class="grid">
+                    <div class="card product-card grid" *ngFor="let product of filteredProducts">
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description }}</p>
+                        <p class="price">₹{{ product.price }}</p>
+                        <p>⭐ {{ product.rating }}/5 ({{ product.reviews }} reviews)</p>
+                        <button class="btn btn-primary rounded-pill" (click)="openProductDialog(product)">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📭 Empty State -->
+            <ng-template #noProducts>
+                <div class="empty-state">
+                    <p>No products found. Try adjusting filters or search terms.</p>
+                </div>
+            </ng-template>
+
+            <!-- 📦 Product Dialog -->
+            <div class="dialog-overlay" *ngIf="selectedProduct" (click)="closeProductDialog()">
+                <div class="dialog-box" (click)="$event.stopPropagation()">
+                    <div class="dialog-header">
+                        <h4>{{ selectedProduct.name }}</h4>
+                        <button class="close-btn rounded-pill" (click)="closeProductDialog()">&times;</button>
+                    </div>
+
+                    <div class="dialog-content">
+                        <p>{{ selectedProduct.description }}</p>
+                        <p>Unit Price: ₹{{ selectedProduct.price }}</p>
+
+                        <div class="quantity-section">
+                            <label>Quantity:</label>
+                            <input type="number" [(ngModel)]="productQuantity" min="1" class="qty-input" />
+                        </div>
+
+                        <p class="total">
+                            Total: ₹{{ productQuantity * selectedProduct.price }}
+                        </p>
+
+                        <div class="dialog-actions">
+                            <button class="btn btn-primary rounded-pill" (click)="confirmAddToCart()">
+                                Confirm
+                            </button>
+                            <button class="btn btn-secondary rounded-pill" (click)="closeProductDialog()">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cart Section -->
+        <section class="dashboard-section" [class.active]="activeSection() === 'cart'">
+            <h2 class="section-title">🛒 Your Cart</h2>
+
+            <!-- If cart has items -->
+            <div *ngIf="cartService.getItems().length > 0; else emptyCart">
+                <div class="grid">
+                    <div class="card product-card grid" *ngFor="let item of cartService.getItems()">
+                        <h3>{{ item.name }}</h3>
+                        <p class="price">₹{{ item.price }}</p>
+
+                        <div class="quantity-section">
+                            <label>Quantity:</label>
+                            <input type="number" [(ngModel)]="item.quantity" min="1" class="qty-input" />
+                        </div>
+
+                        <p class="subtotal">Subtotal: ₹{{ item.price * item.quantity }}</p>
+
+                        <button class="btn btn-danger rounded-pill" (click)="removeFromCart(item.id)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="cart-summary mt-4 text-center">
+                    <h3>Total: ₹{{ cartService.getTotal() }}</h3>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <button class="btn btn-primary rounded-pill" (click)="checkout()">
+                            Checkout
+                        </button>
+                        <button class="btn btn-secondary rounded-pill" (click)="clearCart()">
+                            Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <ng-template #emptyCart>
+                <div class="empty-state">
+                    <p>Your cart is empty. 🛍️</p>
+                </div>
+            </ng-template>
+        </section>
+
+        <!-- Orders Section -->
+        <section class="dashboard-section" [class.active]="activeSection() === 'orders'">
+            <h2 class="section-title">Your Orders</h2>
+
+            <!-- Order Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ orderStats().total }}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ orderStats().active }}</div>
+                    <div class="stat-label">Active Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">₹{{ orderStats().totalSpent }}</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <select class="filter-select" [(ngModel)]="selectedOrderStatus" (change)="applyOrderFilters()">
+                    <option value="">All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                </select>
+
+                <select class="filter-select" [(ngModel)]="selectedTimeRange" (change)="applyOrderFilters()">
+                    <option value="">Last 30 Days</option>
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+            </div>
+
+            <!-- Orders Grid -->
+            <div class="grid">
+                <div class="card order-card" *ngFor="let order of filteredOrders">
+                    <h3>Order #{{ order.id }}</h3>
+                    <p><strong>Date:</strong> {{ order.date }}</p>
+                    <p><strong>Items:</strong> {{ order.items }}</p>
+                    <p><strong>Total:</strong> ₹{{ order.total }}</p>
+                    <p><strong>Location:</strong> {{ order.location }}</p>
+
+                    <span class="status" [ngClass]="order.status">
+                        {{ order.status | titlecase }}
+                    </span>
+
+                    <button class="btn btn-primary rounded-pill" (click)="trackOrder(order)">
+                        {{ order.status === "delivered" ? "Reorder" : "Track Order" }}
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <!-- Profile Section -->
+        <section class="dashboard-section" [class.active]="activeSection() === 'profile'">
+            <h2 class="section-title profile-form full-width ">Manage Profile</h2>
+
+            <div class="profile-form full-width">
+                <div class="form-group">
+                    <label for="firstName">Full Name</label>
+                    <input type="text" id="firstName" [(ngModel)]="customer.name" />
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" [(ngModel)]="customer.email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" [(ngModel)]="customer.phone_no" />
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <textarea id="address" rows="3" [(ngModel)]="customer.address"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="locationSelect">Preferred Location</label>
+                    <select id="locationSelect" [(ngModel)]="selectedLocationId" (change)="onLocationChange($event)">
+                        <option *ngFor="let loc of locations" [value]="loc.id">
+                            {{ loc.name }} - {{ loc.state }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="preferences">Dietary Preferences</label>
+                    <select id="preferences" [(ngModel)]="customer.preferences">
+                        <option value="">No Restrictions</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                        <option value="gluten-free">Gluten-Free</option>
+                        <option value="dairy-free">Dairy-Free</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" [(ngModel)]="customer.emailNotifications" />
+                        Email notifications for orders
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" [(ngModel)]="customer.smsNotifications" />
+                        SMS notifications for delivery
+                    </label>
+                </div>
+
+                <button class="btn btn-primary rounded-pill" (click)="updateProfile()">
+                    Update Profile
+                </button>
+            </div>
+        </section>
+
+
+
     </div>
-  </header>
-
-  <div class="container">
-    <nav class="dashboard-nav">
-      <button class="nav-btn" [class.active]="activeSection() === 'locations'" (click)="setActiveSection('locations')">
-        📍 Locations
-      </button>
-      <button class="nav-btn" [class.active]="activeSection() === 'products'" (click)="setActiveSection('products')">
-        🛍️ Products
-      </button>
-
-      <button class="nav-btn" [class.active]="activeSection() === 'cart'" (click)="setActiveSection('cart')">
-        🛒 Cart ({{ cartService.getItems().length }})
-      </button>
-
-      <button class="nav-btn" [class.active]="activeSection() === 'orders'" (click)="setActiveSection('orders')">
-        📦 Orders
-      </button>
-      <button class="nav-btn" [class.active]="activeSection() === 'profile'" (click)="setActiveSection('profile')">
-        👤 Profile
-      </button>
-    </nav>
-
-    <!-- Locations Section -->
-    <section class="dashboard-section" [class.active]="activeSection() === 'locations'">
-      <h2 class="section-title">Browse Franchise Locations</h2>
-
-      <!-- Search -->
-      <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Search by Name, city, or state.."
-          [(ngModel)]="locationSearchTerm" (keyup.enter)="searchLocations(locationSearchTerm)" />
-        <button class="search-btn" (click)="searchLocations(locationSearchTerm)">
-          🔍 Search
-        </button>
-      </div>
-
-      <!-- Filters -->
-      <div class="filter-bar">
-        <select class="filter-select" [(ngModel)]="selectedState" (change)="applyLocationFilters()">
-          <option value="">All States</option>
-          <option *ngFor="let state of states" [value]="state">
-            {{ state }}
-          </option>
-        </select>
-
-        <select class="filter-select" [(ngModel)]="selectedService" (change)="applyLocationFilters()">
-          <option value="">All Services</option>
-          <option value="Dining">Dining Available</option>
-          <option value="Delivery">Delivery Available</option>
-          <option value="Pickup">Pickup Available</option>
-          <option value="Catering">Catering Available</option>
-        </select>
-      </div>
-
-      <!-- Locations Grid -->
-      <div class="grid">
-        <div class="card location-card" *ngFor="let location of filteredLocations; trackBy: trackByLocationId">
-          <h4>{{ location.name }}</h4>
-          <button class="btn btn-primary" (click)="openDialog(location)">
-            View Details
-          </button>
-        </div>
-      </div>
-
-      <div class="dialog-overlay" *ngIf="selectedLocation" (click)="closeDialog()">
-        <div class="dialog-box" (click)="$event.stopPropagation()">
-          <div class="dialog-header">
-            <h4>{{ selectedLocation.name }}</h4>
-            <button class="close-btn" (click)="closeDialog()">&times;</button>
-          </div>
-
-          <div class="dialog-content">
-            <p>📍 {{ selectedLocation.address }}</p>
-            <p>📞 {{ selectedLocation.phone }}</p>
-            <p>🕒 {{ selectedLocation.hours }}</p>
-            <p>✅ {{ selectedLocation.services.join(" • ") }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Products Section -->
-    <section class="dashboard-section" [class.active]="activeSection() === 'products'">
-      <h2 class="section-title">Search & Purchase Products</h2>
-
-      <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Search products..." [(ngModel)]="productSearchTerm"
-          (keyup.enter)="searchProducts(productSearchTerm)" />
-        <button class="search-btn" (click)="searchProducts(productSearchTerm)">
-          🔍 Search
-        </button>
-      </div>
-
-      <div class="filter-bar">
-        <select class="filter-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
-          <option value="">All Categories</option>
-          <option *ngFor="let cat of categories" [value]="cat">
-            {{ cat }}
-          </option>
-        </select>
-
-        <select class="filter-select" [(ngModel)]="selectedPriceRange" (change)="applyFilters()">
-          <option value="">Price Range</option>
-          <option value="0-10">₹0 - ₹10</option>
-          <option value="10-25">₹10 - ₹25</option>
-          <option value="25-50">₹25 - ₹50</option>
-          <option value="50+">₹50+</option>
-        </select>
-      </div>
-      <div class="grid">
-        <div class="card product-card" *ngFor="let product of filteredProducts">
-          <h3>{{ product.name }}</h3>
-          <p>{{ product.description }}</p>
-          <p class="price">₹{{ product.price }}</p>
-          <p>⭐ {{ product.rating }}/5 ({{ product.reviews }} reviews)</p>
-          <button class="btn btn-success" (click)="openProductDialog(product)">
-            Add to Cart
-          </button>
-        </div>
-      </div>
-      <div class="dialog-overlay" *ngIf="selectedProduct" (click)="closeProductDialog()">
-        <div class="dialog-box" (click)="$event.stopPropagation()">
-          <div class="dialog-header">
-            <h4>{{ selectedProduct.name }}</h4>
-            <button class="close-btn" (click)="closeProductDialog()">&times;</button>
-          </div>
-
-          <div class="dialog-content">
-            <p>{{ selectedProduct.description }}</p>
-            <p>Unit Price: ₹{{ selectedProduct.price }}</p>
-
-            <div class="quantity-section">
-              <label>Quantity:</label>
-              <input type="number" [(ngModel)]="productQuantity" min="1" class="qty-input" />
-            </div>
-
-            <p class="total">Total: ₹{{ productQuantity * selectedProduct.price }}</p>
-
-            <div class="dialog-actions">
-              <button class="btn btn-primary" (click)="confirmAddToCart()">
-                Confirm
-              </button>
-              <button class="btn btn-secondary" (click)="closeProductDialog()">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-    </section>
-
-    <!-- Cart Section -->
-    <section class="dashboard-section" [class.active]="activeSection() === 'cart'">
-      <h2 class="section-title">Your Cart</h2>
-
-      <div class="grid">
-        <div class="card cart-card" *ngFor="let item of cartService.getItems()">
-          <h3>{{ item.name }}</h3>
-          <p>Price: ₹{{ item.price }}</p>
-          <p>Quantity: {{ item.quantity }}</p>
-          <p>Subtotal: ₹{{ item.price * item.quantity }}</p>
-          <button class="btn btn-danger" (click)="removeFromCart(item.id)">
-            Remove
-          </button>
-        </div>
-      </div>
-
-      <div class="cart-summary" *ngIf="cartService.getItems().length">
-        <h3>Total: ₹{{ cartService.getTotal() }}</h3>
-        <button class="btn btn-primary" (click)="checkout()">Checkout</button>
-        <button class="btn btn-secondary" (click)="clearCart()">
-          Clear Cart
-        </button>
-      </div>
-    </section>
-
-    <!-- Orders Section -->
-    <section class="dashboard-section" [class.active]="activeSection() === 'orders'">
-      <h2 class="section-title">Track Order Status</h2>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number">{{ orderStats().total }}</div>
-          <div class="stat-label">Total Orders</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ orderStats().active }}</div>
-          <div class="stat-label">Active Orders</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">₹{{ orderStats().totalSpent }}</div>
-          <div class="stat-label">Total Spent</div>
-        </div>
-      </div>
-
-      <div class="filter-bar">
-        <select class="filter-select" [(ngModel)]="selectedOrderStatus" (change)="applyOrderFilters()">
-          <option value="">All Orders</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-        </select>
-
-        <select class="filter-select" [(ngModel)]="selectedTimeRange" (change)="applyOrderFilters()">
-          <option value="">Last 30 Days</option>
-          <option value="7">Last 7 Days</option>
-          <option value="30">Last 30 Days</option>
-          <option value="90">Last 90 Days</option>
-        </select>
-      </div>
-
-      <div class="grid">
-        <div class="card order-card" *ngFor="let order of filteredOrders">
-          <h3>Order #{{ order.id }}</h3>
-          <p>📅 {{ order.date }}</p>
-          <p>🛍️ {{ order.items }}</p>
-          <p>💰 Total: ₹{{ order.total }}</p>
-          <p>📍 {{ order.location }}</p>
-          <span class="status" [ngClass]="order.status">{{
-            order.status | titlecase
-            }}</span>
-          <button class="btn btn-primary" (click)="trackOrder(order)">
-            {{ order.status === "delivered" ? "Reorder" : "Track Order" }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Profile Section -->
-    <section class="dashboard-section" [class.active]="activeSection() === 'profile'">
-      <h2 class="section-title">Manage Profile & Order History</h2>
-
-      <div class="profile-form">
-        <div class="form-group">
-          <label for="firstName">Full Name</label>
-          <input type="text" id="firstName" [(ngModel)]="customer.name" />
-        </div>
-
-        <!-- <div class="form-group">
-              <label for="lastName">Last Name</label>
-              <input type="text" id="lastName" [(ngModel)]="user().lastName">
-            </div>
-             -->
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" [(ngModel)]="customer.email" />
-        </div>
-
-        <div class="form-group">
-          <label for="phone">Phone</label>
-          <input type="tel" id="phone" [(ngModel)]="customer.phone_no" />
-        </div>
-
-        <div class="form-group">
-          <label for="address">Address</label>
-          <textarea id="address" rows="3" [(ngModel)]="customer.address"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="preferences">Dietary Preferences</label>
-          <select id="preferences" [(ngModel)]="customer.preferences">
-            <option value="">No Restrictions</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="vegan">Vegan</option>
-            <option value="gluten-free">Gluten-Free</option>
-            <option value="dairy-free">Dairy-Free</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" [(ngModel)]="customer.emailNotifications" />
-            Email notifications for orders
-          </label>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" [(ngModel)]="customer.smsNotifications" />
-            SMS notifications for delivery
-          </label>
-        </div>
-
-        <button class="btn btn-primary" (click)="updateProfile()">
-          Update Profile
-        </button>
-      </div>
-    </section>
-  </div>
 </div>

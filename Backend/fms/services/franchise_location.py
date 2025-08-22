@@ -31,6 +31,9 @@ def fetch_franchise_location():
     for loc in locations:
         result.append({
             'location_id': loc.location_id,
+            'franchisee_id': loc.franchisee_id,  # ✅ needed for inventory
+            'franchisee_user_id': loc.franchisee.user_id if loc.franchisee else None,
+            # ✅ direct link to /inventory/{user_id}
             'name': loc.name,
             'address': loc.address,
             'phone': loc.phone,

@@ -25,8 +25,15 @@ def refresh():
     return jsonify(response), status
 
 
-@auth_bp.route("/auth/logout", methods=["POST"])
+@auth_bp.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
     response, status = auth.logout_user()
+    return jsonify(response), status
+
+@auth_bp.route("/forgot", methods=["POST"])
+
+def logout_password():
+    data = request.json
+    response, status = auth.forgot_user(data)
     return jsonify(response), status

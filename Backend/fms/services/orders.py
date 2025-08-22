@@ -4,57 +4,110 @@ from flask_jwt_extended import get_jwt_identity
 from datetime import datetime, UTC
 from sqlalchemy import func
 
+# def create_order(data):
+#     customer_id = get_jwt_identity()
+#
+#     product_items = data.get("items")
+#     if not product_items or not isinstance(product_items, list):
+#         return {"message": "Invalid or missing product items"}, 400
+#
+#     # ✅ Pre-validate all items first
+#     validated_items = []
+#     for item in product_items:
+#         product_id = item.get("product_id")
+#         quantity = item.get("quantity")
+#
+#         if not isinstance(product_id, int) or not isinstance(quantity, int) or quantity <= 0:
+#             return {"message": f"Invalid product_id or quantity in {item}"}, 400
+#
+#         product = Product.query.get(product_id)
+#         if not product:
+#             return {"message": f"Product ID {product_id} not found"}, 404
+#
+#         validated_items.append((product, quantity))
+#
+#
+#     pending_status = Status.query.filter_by(status_name='pending').first()
+#     if not pending_status:
+#         return {"message": "Pending status not configured"}, 500
+#
+#     try:
+#         new_order = Order(
+#             customer_id=customer_id,
+#             status_id=pending_status.status_id,
+#             created_time=datetime.now(UTC)
+#         )
+#         db.session.add(new_order)
+#         db.session.flush()
+#
+#         for product, quantity in validated_items:
+#             order_item = OrderItem(
+#                 order_id=new_order.order_id,
+#                 product_id=product.product_id,
+#                 quantity=quantity,
+#                 price=product.price
+#             )
+#             db.session.add(order_item)
+#
+#         db.session.commit()
+#         return {
+#             "message": "Order placed successfully",
+#             "order_id": new_order.order_id,
+#             "status": pending_status.status_name
+#         }, 201
+#
+#     except Exception as e:
+#         db.session.rollback()
+#         return {"message": f"Internal server error: {str(e)}"}, 500
+
+
 def create_order(data):
     customer_id = get_jwt_identity()
 
-    product_items = data.get("items")
-    if not product_items or not isinstance(product_items, list):
-        return {"message": "Invalid or missing product items"}, 400
+    order_display_id = data.get("order_display_id")
+    franchisee_id = data.get("franchisee_id")
+    total_amount = data.get("total_amount")
+    delivery_address = data.get("delivery_address")
+    status_id = data.get("status_id", 1)  # default pending
 
-    # ✅ Pre-validate all items first
+    product_items = data.get("items")
+
+    if not order_display_id or not franchisee_id or not total_amount:
+        return {"message": "Missing order details"}, 400
+
     validated_items = []
     for item in product_items:
         product_id = item.get("product_id")
         quantity = item.get("quantity")
-
-        if not isinstance(product_id, int) or not isinstance(quantity, int) or quantity <= 0:
-            return {"message": f"Invalid product_id or quantity in {item}"}, 400
-
-        product = Product.query.get(product_id)
-        if not product:
-            return {"message": f"Product ID {product_id} not found"}, 404
-
-        validated_items.append((product, quantity))
-
-
-    pending_status = Status.query.filter_by(status_name='pending').first()
-    if not pending_status:
-        return {"message": "Pending status not configured"}, 500
+        price = item.get("price")
+        if not all([product_id, quantity, price]):
+            return {"message": "Invalid product item"}, 400
+        validated_items.append((product_id, quantity, price))
 
     try:
         new_order = Order(
+            order_display_id=order_display_id,
             customer_id=customer_id,
-            status_id=pending_status.status_id,
+            franchisee_id=franchisee_id,
+            total_amount=total_amount,
+            delivery_address=delivery_address,
+            status_id=status_id,
             created_time=datetime.now(UTC)
         )
         db.session.add(new_order)
         db.session.flush()
 
-        for product, quantity in validated_items:
+        for product_id, quantity, price in validated_items:
             order_item = OrderItem(
                 order_id=new_order.order_id,
-                product_id=product.product_id,
+                product_id=product_id,
                 quantity=quantity,
-                price=product.price
+                price=price
             )
             db.session.add(order_item)
 
         db.session.commit()
-        return {
-            "message": "Order placed successfully",
-            "order_id": new_order.order_id,
-            "status": pending_status.status_name
-        }, 201
+        return {"message": "Order placed successfully", "order_id": new_order.order_id}, 201
 
     except Exception as e:
         db.session.rollback()
@@ -82,7 +135,7 @@ def get_orders_by_role(role_name, user_id):
     output = []
     for o in orders:
         items_str = []
-        for item in o.order_item:
+        for item in o.order_items:
             if item.quantity > 1:
                 items_str.append(f"{item.product.name} x{item.quantity}")
             else:
@@ -103,6 +156,7 @@ def get_orders_by_role(role_name, user_id):
 
 def get_order_by_id(order_id, role_name, user_id):
     order = Order.query.get(order_id)
+    print(str(order_id)+": "+str(role_name)+" : "+str(user_id))
     if not order:
         return {"message": "Order not found"}, 404
 
@@ -120,35 +174,65 @@ def get_order_by_id(order_id, role_name, user_id):
         franchisee_product_ids = db.session.query(Inventory.product_id)\
             .filter_by(franchisee_id=franchisee.franchisee_id).all()
         franchisee_product_ids = [p[0] for p in franchisee_product_ids]
+        print("3 : "+str(item_product_ids)+" - "+str(franchisee_product_ids)+" - "+str(franchisee_product_ids))
 
         if not any(pid in franchisee_product_ids for pid in item_product_ids):
+            print("debug 1")
             return {"message": "Unauthorized"}, 403
 
     # Admin and Franchisor have access to all orders
 
-    customer = User.query.get(order.user_id)
-    items = OrderItem.query.filter_by(order_id=order.order_id).all()
+    customer = User.query.get(order.customer_id)
+    # items = OrderItem.query.filter_by(order_id=order.order_id).all()
+    #
+    # order_details = {
+    #     "order_id": order.order_id,
+    #     "amount" : float(order.total_amount),
+    #     "customer_name": customer.name if customer else "Unknown",
+    #     "status": order.status.status_name,
+    #     "created_time": order.created_time.isoformat(),
+    #     "items": [
+    #         {
+    #             "product_id": item.product_id,
+    #             "product_name": item.product.name,
+    #             "quantity": item.quantity,
+    #             "price": item.price
+    #         }
+    #         for item in items
+    #     ]
+    # }
+    #
+    # return order_details, 200
+
+    items = []
+    for item in OrderItem.query.filter_by(order_id=order.order_id).all():
+        stock_qty = (
+            db.session.query(Inventory.quantity)
+            .filter_by(product_id=item.product_id)
+            .first()
+        )
+        items.append({
+            "product_id": item.product_id,
+            "product_name": item.product.name,
+            "quantity": item.quantity,
+            "price": item.price,
+            "stock_quantity": stock_qty[0] if stock_qty else 0
+        })
 
     order_details = {
         "order_id": order.order_id,
-        "customer_name": customer.full_name if customer else "Unknown",
+        'display_id':order.order_display_id,
+        "customer_name": customer.name if customer else "Unknown",
         "status": order.status.status_name,
         "created_time": order.created_time.isoformat(),
-        "items": [
-            {
-                "product_id": item.product_id,
-                "product_name": item.product.name,
-                "quantity": item.quantity,
-                "price": item.price
-            }
-            for item in items
-        ]
+        "amount": float(order.total_amount),
+        "items": items
     }
-
     return order_details, 200
 
 def update_order_status(order_id, user_id, status_id):
     order = Order.query.get(order_id)
+    print(order)
     if not order:
         return {"message": "Order not found"}, 404
 
@@ -159,9 +243,9 @@ def update_order_status(order_id, user_id, status_id):
     franchisee_product_ids = db.session.query(Inventory.product_id).filter_by(franchisee_id=franchisee.franchisee_id).all()
     franchisee_product_ids = [p[0] for p in franchisee_product_ids]
 
-    order_product_ids = [item.product_id for item in order.order_items]
-    if not any(pid in franchisee_product_ids for pid in order_product_ids):
+    if order.franchisee_id != franchisee.franchisee_id:
         return {"message": "Unauthorized to update this order"}, 403
+    # print(str(order_product_ids)+" : : "+str(franchisee_product_ids))
 
     order.status_id = status_id
     db.session.commit()
@@ -242,7 +326,7 @@ def get_order_by_user(user_id):
     for order in orders:
         # Get all order items for each order
         items = []
-        for oi in order.order_item:  # thanks to backref in OrderItem
+        for oi in order.order_items:  # thanks to backref in OrderItem
             items.append({
                 "product_id": oi.product_id,
                 "product_name": oi.product.name,
@@ -311,3 +395,35 @@ def get_product_sales():
     ]
 
     return data, 200
+
+
+def all_order():
+    orders = Order.query.all()
+    results = []
+    for order in orders:
+        customer = User.query.get(order.customer_id)
+        items = []
+        for item in OrderItem.query.filter_by(order_id=order.order_id).all():
+            stock_qty = (
+                db.session.query(Inventory.quantity)
+                .filter_by(product_id=item.product_id)
+                .first()
+            )
+            items.append({
+                "product_id": item.product_id,
+                "product_name": item.product.name,
+                "quantity": item.quantity,
+                "price": float(item.price),
+                "stock_quantity": stock_qty[0] if stock_qty else 0
+            })
+
+        results.append({
+            "order_id": order.order_id,
+            "display_id": order.order_display_id,
+            "customer_name": customer.name if customer else "Unknown",
+            "status": order.status.status_name,
+            "created_time": order.created_time.isoformat(),
+            "amount": float(order.total_amount),
+            "items": items
+        })
+    return results, 200

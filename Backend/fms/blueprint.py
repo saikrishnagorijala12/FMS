@@ -16,6 +16,7 @@ from fms.routes.inventory import inventory_bp
 from fms.routes.franchise_location import franchise_location_bp
 from fms.routes.customer_preferences import preferences_bp
 from fms.routes.sales import sales_bp
+from fms.routes.stock import stock_bp
 
 def register_routes(app):
     app.register_blueprint(auth_bp)
@@ -36,3 +37,4 @@ def register_routes(app):
     app.register_blueprint(franchise_location_bp)
     app.register_blueprint(preferences_bp)
     app.register_blueprint(sales_bp)
+    app.register_blueprint(stock_bp)

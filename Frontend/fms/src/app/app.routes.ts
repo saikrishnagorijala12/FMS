@@ -5,6 +5,7 @@ import { ForgotPasswordComponent } from './components/auth/forgot-password/forgo
 import { CustomerComponent } from './components/dashboards/customer/customer.component';
 import { FranchiseeComponent } from './components/dashboards/franchisee/franchisee.component';
 import { FrananchisorComponent } from './components/dashboards/frananchisor/frananchisor.component';
+import { ResetPasswordComponent } from './components/auth/reset-password/reset-password.component';
 
 
 export const routes: Routes = [
@@ -14,5 +15,7 @@ export const routes: Routes = [
     {path: 'forgot', component: ForgotPasswordComponent},
     {path: 'customer', component: CustomerComponent},
     {path: 'franchisee', component: FranchiseeComponent},
-    {path: 'franchisor', component: FrananchisorComponent}
+    {path: 'franchisor', component: FrananchisorComponent},
+    { path: 'reset-password/:token', component: ResetPasswordComponent },
+    { path: '**', redirectTo: 'login' },
 ];

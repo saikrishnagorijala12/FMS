@@ -48,7 +48,7 @@ Order Management
 
 POST /orders - Create new order (Customer)
 GET /orders - Get orders (filtered by role)
-GET /orders/{order_id} - Get specific order details
+GET /orders/order/{order_id} - Get specific order details
 PUT /orders/{order_id}/status - Update order status (Franchisee)
 PUT /orders/{order_id}/cancel - Cancel order
 GET /orders/{order_id}/tracking - Get order tracking information

@@ -10,7 +10,7 @@ from fms.services import products
 products_bp = Blueprint('products', __name__,url_prefix='/products')
 
 
-@products_bp.route('/',methods=['POST'])
+@products_bp.route('',methods=['POST'])
 @jwt_required
 def create_product():
     data=request.json

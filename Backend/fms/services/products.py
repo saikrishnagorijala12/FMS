@@ -9,7 +9,7 @@ from fms.utils import role_required
 def new_product(data):
     user_id = get_jwt_identity()
 
-    required_fields = ['name', 'price', 'stock']
+    required_fields = ['name', 'price']
     if not all(field in data for field in required_fields):
         return {'msg': 'Missing required fields'}, 400
 
@@ -21,8 +21,9 @@ def new_product(data):
         name=data['name'],
         description=data.get('description'),
         price=data['price'],
-        stock=data['stock'],
-        # category=data.get('category'),
+        rating =data['rating'],
+        review = data['review'],
+        category=data.get('category'),
         franchisor_id=franchisor.id
     )
 

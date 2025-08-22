@@ -23,3 +23,15 @@ def inventory_report():
 def financial_report():
     response, status = reports.generate_financial_report()
     return jsonify(response), status
+
+@reports_bp.route('/franchisor', methods=['GET'])
+@jwt_required()
+def get_reports():
+    response, status = reports.get_franchisor_report()
+    return jsonify(response), status
+
+@reports_bp.route('/franchise/<int:user_id>', methods=['GET'])
+@jwt_required()
+def franchisee_reports(user_id):
+    response, status = reports.get_franchise_report(user_id)
+    return jsonify(response), status

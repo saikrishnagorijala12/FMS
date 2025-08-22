@@ -101,6 +101,7 @@ def get_all_franchises():
     franchises = FranchiseApplication.query.all()
     data = [{
         "id": app.application_display_id,
+        "aid":app.application_id,
         "applicant": app.franchisee.user.name,  # assuming Franchisee has relationship to User as `user`
         "region": app.region,
         "investment": float(app.investment) if app.investment is not None else None,
@@ -129,16 +130,25 @@ def update_franchise(franchise_id, data):
     db.session.commit()
     return jsonify({"msg": "Franchise updated"}), 200
 
-def update_status(franchise_id, status_id):
-    f = Franchisee.query.get(franchise_id)
-    if not f:
-        return jsonify({"msg": "Franchise not found"}), 404
-    status = Status.query.get(status_id)
-    if not status:
-        return jsonify({"msg": "Invalid status"}), 400
-    f.status_id = status_id
+def update_status(application_id, data):
+    new_status_id = data.get('status_id')  # directly sent as integer
+
+    if new_status_id is None:
+        return {"error": "Missing status_id"}, 400
+
+    application = FranchiseApplication.query.filter_by(application_id=application_id).first()
+    if not application:
+        return {"error": "Application not found"}, 404
+
+        # Optional: validate that the status_id exists
+        # status_record = Status.query.get(new_status_id)
+        # if not status_record:
+        #     return jsonify({"error": "Invalid status_id"}), 400
+
+    application.status_id = new_status_id
     db.session.commit()
-    return jsonify({"msg": "Franchise status updated"}), 200
+
+    return {"message": f"Application {application_id} updated successfully", "status_id": new_status_id}, 200
 
 def get_franchise_by_user(user_id):
     f = Franchisee.query.filter_by(user_id=user_id).first()

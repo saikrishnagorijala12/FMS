@@ -7,12 +7,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_refresh_token, create_access_token
 from flask_cors import CORS
+from flask_mail import Mail, Message
 
 
 db=SQLAlchemy()
 jwt = JWTManager()
 cors = CORS()
 jwt_blacklist = set()
+mail=Mail()
 
 from .blueprint import register_routes
 
@@ -39,10 +41,17 @@ def create_app():
             "options": "-c search_path=FMS2"
         }
     }
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = "saikrishnagorijala14@gmail.com"
+    app.config['MAIL_PASSWORD'] = 'wrho humv bebj sjdt'  # Use App Password, not real one
+    app.config['MAIL_DEFAULT_SENDER'] = "saikrishnagorijala14@gmail.com"
+
     db.init_app(app)
     jwt.init_app(app)
     register_routes(app)
-
+    mail.init_app(app)
     CORS(app)
 
     return app
@@ -62,9 +71,10 @@ def generate_access_token(user):
         additional_claims={
             "role_id": str(user.role_id),
             "role_name": user.role.role_name,
+            "name"  : user.name,
             # "franchisor_id": str(user.franchisor.franchisor_id) if user.franchisor else None
         },
-        expires_delta=timedelta(minutes=60)
+        expires_delta=timedelta(minutes=600)
     )
 
 def refresh_access_token(user):
@@ -74,5 +84,5 @@ def refresh_access_token(user):
             "role_id": str(user.role_id),
             "role_name": user.role.role_name  # accessing via relationship
         },
-        expires_delta=timedelta(minutes=60)  # or longer if needed
+        expires_delta=timedelta(minutes=600)  # or longer if needed
     )

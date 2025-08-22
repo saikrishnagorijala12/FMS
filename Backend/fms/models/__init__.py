@@ -17,7 +17,8 @@ from .StockRequest import StockRequest
 from .User import User
 from .Withdrawal import Withdrawal
 from .CustomerPreferences import CustomerPreferences
+from .Stock import Stock
 
 __all__ = ['ChatMessage', 'Commission', 'Customer', 'CustomerPreferences', 'Earnings', 'FranchiseApplication', 'Franchisee', 'FranchiseLocation',
            'Franchisor', 'Inventory', 'Order', 'OrderItem', 'Payment', 'Product', 'Role', 'Status', 'StockRequest', 'User',
-           'Withdrawal']
+           'Withdrawal', 'Stock']

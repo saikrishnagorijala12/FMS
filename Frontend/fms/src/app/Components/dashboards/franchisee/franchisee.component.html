@@ -1,157 +1,487 @@
+<div class="app d-flex flex-column vh-100">
+  <!-- Header -->
+  <header class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center">
+        🏪 <span class="ms-2">FMS - Franchise Dashboard</span>
+      </a>
 
-<header class="header">
-  <div class="header-content">
-    <div class="logo">🏪 FMS</div>
-    <div class="logo">Franchise Dashboard</div>
-    <div class="user-info">
-        <span>Welcome, {{ franchisee.name }}</span>
-        <div class="user-avatar dropdown">
-          <div
-            class="rounded-circle profile-avatar dropdown-toggle d-flex justify-content-center align-items-center"
-            id="profileDropdown"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            style="cursor: pointer"
-          >
+      <div class="d-flex align-items-center">
+        <span class="text-white me-3">Welcome, {{ shortName }}</span>
+        <!-- User Dropdown -->
+        <div class="dropdown" (click)="toggleDropdown()" [class.open]="dropdownOpen">
+          <!-- Avatar Button -->
+          <button type="button" class="btn btn-outline-light rounded-circle">
             {{ franchisee.name.charAt(0) }}
-          </div>
-          <ul
-            class="dropdown-menu dropdown-menu-end profile-dropdown"
-            aria-labelledby="profileDropdown"
-          >
+          </button>
+          <!-- Dropdown Menu -->
+          <ul class="dropdown-menu dropdown-menu-end" *ngIf="dropdownOpen">
             <li>
-              <a
-                class="dropdown-item d-flex align-items-center text-danger"
-                (click)="logout()"
-              >
-                <i class="fa fa-sign-out dropdown-icon text-danger"></i>
-                <span>Logout</span>
+              <span class="status" [ngClass]="franchisee.name">
+                Full Name : {{ franchisee.name | titlecase }}
+              </span>
+            </li>
+            <li>
+              <a class="dropdown-item text-danger d-flex align-items-center" (click)="logout()">
+                <i class="fa fa-sign-out me-2 text-danger"></i> Logout
               </a>
             </li>
           </ul>
         </div>
-        
-      </div>
-  </div>
-  
-</header>
-
-<div class="container">
-  <nav class="dashboard-nav">
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'inventory'" 
-      (click)="showSection('inventory')"
-    >📦 Manage Inventory</button>
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'orders'" 
-      (click)="showSection('orders')"
-    >🛒 Customer Orders</button>
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'sales'" 
-      (click)="showSection('sales')"
-    >💰 Sales & Revenue</button>
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'commission'" 
-      (click)="showSection('commission')"
-    >👥 Pay Commissions</button>
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'analytics'" 
-      (click)="showSection('analytics')"
-    >📊 Analytics</button>
-    <button 
-      class="nav-btn" 
-      [class.active]="activeSection === 'apply'" 
-      (click)="showSection('apply')"
-    >📝 Apply for Franchise</button>
-
-  </nav>
-
-
-  <!-- Inventory Section -->
-  <section *ngIf="activeSection === 'inventory'" class="dashboard-section active">
-    <h2 class="section-title">Manage Inventory & Stock Requests</h2>
-    <div class="grid">
-      <div class="card" *ngFor="let product of inventory">
-        <h3>{{product.name}}</h3>
-        <p>Stock Level: <strong>{{product.stock}}</strong></p>
-        <button class="btn btn-primary" (click)="requestStock(product.name)">Request More Stock</button>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- Orders Section -->
-  <section *ngIf="activeSection === 'orders'" class="dashboard-section active">
-    <h2 class="section-title">Process Customer Orders</h2>
-    <div class="grid">
-      <div class="card" *ngFor="let order of orders">
-        <h3>{{order.title}}</h3>
-        <p>Status: <strong>{{order.status}}</strong></p>
-        <button class="btn btn-primary" (click)="updateOrderStatus(order)">
-          {{ order.status === 'Delivered' ? 'View Details' : 'Update Status' }}
+  <!-- Main Body -->
+  <div class="container-fluid pad flex-grow-1 d-flex flex-column py-3">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills justify-content-center mb-4">
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'inventory'" (click)="showSection('inventory')">
+          📦 Manage Inventory
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'orders'" (click)="showSection('orders')">
+          🛒 Customer Orders
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'sales'" (click)="showSection('sales')">
+          💰 Sales & Revenue
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'commission'" (click)="showSection('commission')">
+          👥 Pay Commissions
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'analytics'" (click)="showSection('analytics')">
+          📊 Analytics
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeSection === 'apply'" (click)="showSection('apply')">
+          📝 Apply for Franchise
+        </button>
+      </li>
+    </ul>
+
+    <!-- Alert Messages -->
+    <div *ngIf="successMessage" class="alert alert-success text-center">
+      {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger text-center">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Inventory Section -->
+    <section class="dashboard-section active" *ngIf="activeSection === 'inventory'">
+      <h2 class="section-title" style="text-align: center">
+        Manage Inventory & Stock Requests
+      </h2>
+      <hr class="hr hr-blurry" />
+
+      <!-- Search Bar -->
+      <div class="search-bar mb-3 d-flex gap-2">
+        <input type="text" class="search-input form-control" placeholder="Search by Product or Category..."
+          [(ngModel)]="searchTerm" (keyup.enter)="applyFilters()" />
+        <button class="search-btn btn btn-primary rounded-pill" (click)="applyFilters()">
+          🔍 Search
         </button>
       </div>
+
+      <!-- Filters -->
+      <div class="filter-bar d-flex gap-2 mb-4">
+        <!-- Category Filter -->
+        <select class="filter-select form-select w-auto rounded-pill" [(ngModel)]="selectedCategory"
+          (change)="applyFilters()">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+
+        <!-- Stock Status Filter -->
+        <select class="filter-select form-select w-auto rounded-pill" [(ngModel)]="selectedStock"
+          (change)="applyFilters()">
+          <option value="">All Stock</option>
+          <option value="low">Low Stock (&lt; 10)</option>
+          <option value="in">In Stock</option>
+          <option value="out">Out of Stock</option>
+        </select>
+      </div>
+
+      <hr class="hr hr-blurry" />
+      <div col-md-5>
+        <div class="grid location-grid col-md-12">
+          <div class="card location-card d-flex flex-column justify-content-between" *ngFor="let product of filteredInventory">
+            <h3>{{ product.name }}</h3>
+            <p>
+              Stock Level: <strong>{{ product.stock }}</strong>
+            </p>
+            <div class="card-actions grid gap-2 mt-auto">
+              <hr class="dotted w-95 p-1 mt-2 h-100" />
+              <button class="btn btn-primary rounded-pill w-95" style="max-width: 100%"
+                (click)="openStockRequestDialog(product.id, product.name, product.stock)">
+                Request More Stock
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Custom Stock Request Dialog -->
+    <div class="dialog-overlay" *ngIf="showStockDialog" (click)="closeDialog()">
+      <div class="dialog-box" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>Request Stock</h3>
+          <button class="close-btn rounded-pill" (click)="closeDialog()">
+            &times;
+          </button>
+        </div>
+        <div class="dialog-content">
+          <p><strong>Product : </strong> {{ selectedProduct }}</p>
+          <p><strong>Current Stock : </strong> {{ currentStock }} units</p>
+          <div class="form-group">
+            <label for="quantity">Requested Quantity : </label>
+            <input type="number" id="quantity" [(ngModel)]="requestQuantity" min="1" max="1000" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="urgency">Urgency Level : </label>
+            <select id="urgency" [(ngModel)]="selectedUrgency" class="form-select">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="request-preview" *ngIf="requestQuantity > 0">
+            <h4>Request Summary</h4>
+            <p><strong>Quantity : </strong> {{ requestQuantity }} units</p>
+            <p>
+              <strong>Urgency : </strong>
+              <span class="urgency-badge" [ngClass]="'urgency-' + selectedUrgency.toLowerCase()">{{
+                selectedUrgency }}</span>
+            </p>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary rounded-pill" (click)="closeDialog()">
+              Close
+            </button>
+            <button class="btn btn-success rounded-pill" (click)="submitRequest()" [disabled]="requestQuantity < 1">
+              Submit Request
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
 
-  <!-- Sales Section -->
-  <section *ngIf="activeSection === 'sales'" class="dashboard-section active">
-    <h2 class="section-title">Sales & Revenue Overview</h2>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number">{{sales.totalSales | currency:'INR':'₹'  }}</div>
-        <div class="stat-label">Total Sales</div>
+    <!-- Orders Section -->
+    <section class="dashboard-section active" *ngIf="activeSection === 'orders'">
+      <h2 class="section-title">Process Customer Orders</h2>
+      <hr class="hr hr-blurry" />
+
+      <!-- 🔍 Search Bar -->
+      <!-- <div class="search-bar mb-3 d-flex gap-2">
+        <input type="text" class="search-input form-control" placeholder="Search products by name or category..."
+          [(ngModel)]="productSearchTerm" (input)="applyProductFilters()" />
+        <button class="search-btn btn btn-primary rounded-pill" (click)="applyProductFilters()">
+          🔍 Search
+        </button>
+      </div> -->
+
+      <!-- ⛩️ Filters -->
+      <!-- <div class="filter-bar d-flex gap-2 mb-4">
+        <select class="filter-select form-select w-auto rounded-pill" [(ngModel)]="selectedCategory"
+          (change)="applyProductFilters()">
+          <option value="">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">
+            {{ cat }}
+          </option>
+        </select>
+      </div> -->
+
+      <!-- <hr class="hr hr-blurry" /> -->
+      <div class="scrollable-window mt-3">
+        <div class="grid">
+          <div class="card product-card grid" *ngFor=" let order of orders">
+            <h3>{{ order.title }}</h3>
+            <p>
+              Status: <strong>{{ order.status }}</strong>
+            </p>
+            <div>
+              <button class="btn btn-primary rounded-pill w-95"
+                style="width: 325px; max-width: 100%; margin-bottom: 20px;"
+                (click)="openViewOrderDetails(order.order_id)">
+                View Details
+              </button>
+              <button *ngIf="order.status !== 'delivered'" class="btn btn-secondary rounded-pill w-95 mb-2"
+                style="width: 325px; max-width: 100%" (click)="openupdateStatusDialog(order.order_id)">
+                Update Status
+              </button>
+
+              <button *ngIf="order.status === 'delivered'" class="btn invisible mb-2"
+                style="width: 325px; max-width: 100%">
+                Placeholder
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">{{sales.totalRevenue  | currency:'INR':'₹' }}</div>
-        <div class="stat-label">Total Revenue</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{sales.commissionPaid | currency:'INR':'₹'}}</div>
-        <div class="stat-label">Commission Paid</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{sales.withdrawnEarnings | currency:'INR':'₹' }}</div>
-        <div class="stat-label">Withdrawn Earnings</div>
+    </section>
+
+    <!-- view Status  Dialog -->
+    <div class="dialog-overlay" *ngIf="showStatusDialog" (click)="closeDialog()">
+      <div class="dialog-box" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>Update Status</h3>
+          <button class="close-btn rounded-pill" (click)="closeDialog()">
+            &times;
+          </button>
+        </div>
+        <div class="dialog-content">
+          <div class="form-group">
+            <label for="status">Update Status :</label>
+            <select id="status" [(ngModel)]="selectedStatus" class="form-select">
+              <option value="1">Pending</option>
+              <option value="4">Processing</option>
+              <option value="5">Shipped</option>
+              <option value="6">Delivered</option>
+              <option value="7">Completed</option>
+              <option value="8">Failed</option>
+            </select>
+            <div>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <div></div>
+            <button class="btn btn-secondary rounded-pill" (click)="closeDialog()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary rounded-pill" (click)="updateStatus()">
+              Submit Request
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </section>
 
-  <!-- Commission Section -->
-  <section *ngIf="activeSection === 'commission'" class="dashboard-section active">
-    <h2 class="section-title">Pay Commissions to Franchisor</h2>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number">{{sales.commissionPaid | currency:'INR':'₹'}}</div>
-        <div class="stat-label">Commission Paid</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{unPaidCommissions | currency:'INR':'₹'}}</div>
-        <div class="stat-label">Commission Pending</div>
+    <!-- Order Details Dialog -->
+    <div class="dialog-overlay" *ngIf="viewOrderDialouge" (click)="closeDialog()">
+      <div class="dialog-box" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>Order by {{ selectedOrderDetails?.customer_name }}</h3>
+          <button class="close-btn rounded-pill" (click)="closeDialog()">
+            &times;
+          </button>
+        </div>
+        <div class="dialog-content">
+          <div class="form-group">
+            <p><strong>Order ID:</strong> {{ selectedOrderDetails?.display_id }}</p>
+            <p>
+              <strong>Customer:</strong> {{ selectedOrderDetails?.customer_name }}
+            </p>
+            <p><strong>Status:</strong> {{ selectedOrderDetails?.status }}</p>
+            <p>
+              <strong>Order Amount:</strong> ₹{{ selectedOrderDetails?.amount }}
+            </p>
+            <p>
+              <strong>Created:</strong>
+              {{ selectedOrderDetails?.created_time | date : "short" }}
+            </p>
+          </div>
+          <div class="form-group">
+            <h4>Items</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Qty in stock</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of selectedOrderDetails?.items">
+                  <td>{{ item.product_name }}</td>
+                  <td>{{ item.stock_quantity }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>₹{{ item.price }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary rounded-pill" (click)="closeDialog()">
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-    <button class="btn btn-primary" (click)="payCommission()">Pay Now</button>
-  </section>
 
-  <!-- Analytics Section -->
-  <section *ngIf="activeSection === 'analytics'" class="dashboard-section active">
-    <h2 class="section-title">Analytics Dashboard</h2>
-    <p>Visuals and financial reports will be shown here.</p>
-  </section>
+    <!-- Sales Section -->
+    <section class="dashboard-section active" *ngIf="activeSection === 'sales'">
+      <h2 class="section-title" style="text-align: center">
+        Sales & Revenue Overview
+      </h2>
+      <hr class="hr hr-blurry" />
+      <div class="scrollable-window mt-3">
+        <div class="grid">
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ sales.totalSales | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Total Sales</div>
+          </div>
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ sales.totalRevenue | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ sales.commissionPaid | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Commission Paid</div>
+          </div>
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ sales.withdrawnEarnings | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Withdrawn Earnings</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Apply for Franchise Section -->
-  <section *ngIf="activeSection === 'apply'" class="dashboard-section active">
-    <h2 class="section-title">Apply to Own a Franchise</h2>
-    <form (ngSubmit)="submitApplication()">
+    <!-- Commissions Section -->
+    <section class="dashboard-section active" *ngIf="activeSection === 'commission'">
+      <h2 class="section-title text-center mb-3">
+        Commission Rates & Earnings Stats
+      </h2>
+
+      <hr class="hr hr-blurry" />
+
+      <div class="scrollable-window mt-3 justify-content-center">
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ sales.commissionPaid | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Commission Paid</div>
+          </div>
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ unPaidCommissions | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Commission Pending</div>
+          </div>
+          <div class="card product-card grid">
+            <div class="stat-number">
+              {{ processedCommissions | currency : "INR" : "₹" }}
+            </div>
+            <div class="stat-label">Commission Processed</div>
+          </div>
+
+
+          <button class="btn btn-primary rounded-pill w-50" style="width: 300px;" (click)="openPayCommissionDialouge()">
+            Pay Now
+          </button>
+        </div>
+      </div>
+      <!-- </div> -->
+    </section>
+
+    <!-- Custom Stock Request Dialog -->
+    <div class="dialog-overlay" *ngIf="showCommissionsDialog" (click)="closeDialog()">
+      <div class="dialog-box" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>Commission</h3>
+          <button class="close-btn rounded-pill" (click)="closeDialog()">
+            &times;
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h5>
+            You want to pay the pending commission of
+            {{ unPaidCommissions | currency : "INR" : "₹" }}
+          </h5>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary rounded-pill" (click)="closeDialog()">
+              Cancel
+            </button>
+            <button class="btn btn-primary rounded-pill" (click)="updatecommissions()">
+              Submit Request
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <section *ngIf="activeSection === 'analytics'" class="dashboard-section active">
+      <h2 class="section-title text-center mb-3">Analytics Dashboard</h2>
+      <hr class="hr hr-blurry" />
+      <div class="scrollable-window mt-3 justify-content-center">
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <div class="card product-card grid">
+
+            <div class="card">
+              <h3>Franchise Analytics</h3>
+              <p>Total Orders: {{ franchiseAnalytics?.orders?.totalOrders }}</p>
+              <p>Total Sales: ₹{{ franchiseAnalytics?.orders?.totalSales }}</p>
+              <p>Average Order Value: ₹{{ franchiseAnalytics?.orders?.averageOrderValue }}</p>
+              <p>Best Product: {{ franchiseAnalytics?.orders?.bestProduct }}</p>
+              <p>Total Commission: ₹{{ franchiseAnalytics?.commissions?.totalCommission }}</p>
+              <p>Total Earnings: ₹{{ franchiseAnalytics?.earnings?.totalEarnings }}</p>
+              <p>Withdrawn: ₹{{ franchiseAnalytics?.earnings?.withdrawn }}</p>
+              <p>Balance: ₹{{ franchiseAnalytics?.earnings?.balance }}</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apply for Franchise Section -->
+    <section class="dashboard-section active" *ngIf="activeSection === 'apply'">
+      <h2 class="section-title text-center mb-3">Apply to Own a Franchise</h2>
+      <hr class="hr hr-blurry" />
+
+
       <div>
-        <label for="region">Desired Region:</label>
-        <input type="text" id="region" [(ngModel)]="application.region" name="region">
+        <div>
+          <form (ngSubmit)="submitApplication()" #applicationForm="ngForm"
+            class="p-4 border rounded shadow-sm bg-white">
+            <h4 class="mb-12">Franchise Application</h4>
+
+            <!-- Desired Region -->
+            <label for="region" class="form-label">Desired Region</label>
+            <input type="text" id="region" name="region" [(ngModel)]="application.region" class="form-control"
+              required />
+
+            <!-- Investment -->
+            <label for="investment" class="form-label">Investment (₹)</label>
+            <input type="number" id="investment" name="investment" [(ngModel)]="application.investment"
+              class="form-control" min="0" required />
+
+            <!-- Experience -->
+            <label for="experience" class="form-label">Relevant Experience</label>
+            <textarea id="experience" name="experience" [(ngModel)]="application.experience" class="form-control"
+              rows="4" required></textarea>
+          </form>
+        </div>
+        <div class="scrollable-window mt-3 justify-content-center">
+          <div class="d-flex flex-wrap justify-content-center gap-3">
+            <!-- Submit Button -->
+            <button class="btn btn-primary rounded-pill" type="submit" [disabled]="!applicationForm.form.valid">
+              Submit Application
+            </button>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-primary" type="submit">Submit Application</button>
-    </form>
-  </section>
-</div>
+    </section>

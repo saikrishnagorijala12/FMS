@@ -16,5 +16,5 @@ class OrderItem(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     created_time = db.Column(db.TIMESTAMP, default=utc_now)
 
-    order = db.relationship("Order", backref="order_item")
+    order = db.relationship("Order", backref=db.backref("order_items", cascade="all, delete-orphan", lazy=True))
     product = db.relationship("Product", backref="order_item")

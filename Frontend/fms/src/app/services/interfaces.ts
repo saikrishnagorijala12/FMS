@@ -5,8 +5,6 @@ export interface JwtPayload {
 }
 
 // Customer Dashboard API CALLS Data needed
-
-
 //customer Details
 export interface Customer {
   user_id: number;
@@ -18,6 +16,7 @@ export interface Customer {
   preferences? : string;
   emailNotifications? : boolean;
   smsNotifications? : boolean;
+  preferredLocationId?:number;
 }
 //Locations Tab
 export interface FranchiseLocation {
@@ -28,10 +27,13 @@ export interface FranchiseLocation {
   hours: string;
   services: string[];
   state: string;
+  franchisee_id: number;
 }
 
 export interface RawLocation {
   location_id: number;
+  franchisee_id :number;
+  franchisee_user_id: number;
   name: string;
   address: string;
   phone: string;
@@ -44,7 +46,6 @@ export interface RawLocation {
 
 export type LocationsResponse = RawLocation[];
 
-//Products Tab
 export interface Product {
   id: number;
   name: string;
@@ -53,8 +54,9 @@ export interface Product {
   rating: number;
   reviews: number;
   category: string;
+  franchisee_id:number;
+  
 }
-
 export interface ProductResponse {
   products: Product[];
 }
@@ -86,6 +88,7 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  franchisee_id:number;
 }
 
 
@@ -93,8 +96,11 @@ export interface CartItem {
 // Franchisee Dashboard Related Interfaces
 
 export interface InventoryItem {
+  id: number;
   name: string;
   stock: number;
+  category:string;
+  price :number;
 }
 
 export interface OrderItem {
@@ -117,6 +123,7 @@ export interface Order_Response {
 }
 
 export interface OrderDisplay {
+  order_id :number;
   title: string;   
   status: string;  
 }
@@ -128,6 +135,25 @@ export interface Sales {
     withdrawnEarnings: number;
 }
 
+export interface OrderItemDetails {
+  price: string;
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  stock_quantity:number;
+}
+
+export interface OrderDetails {
+  created_time: string;
+  customer_name: string;
+  items: OrderItemDetails[];
+  order_id: number;
+  status: string;
+  amount:number;
+  display_id:string;
+}
+
+
 
 // Franchisor Dashboard Needed Interfaces
 
@@ -138,20 +164,34 @@ export interface Applications {
   investment: number;
   experience: string;
   status: string;
+  aid : number;
 }
 
 export interface RawStocksRequests {
   id : string;
+  product_id : number;
+  franchisee_id:number;
   franchise : string;
   product : String;
   quantity : number;
   urgency : string;
-  status: string,
+  status_name: string,
 }
 
-export interface Stocks {
+export interface RawStocks{
+  category : string,
+  description:string,
+  name:string,
+  price :number,
+  stock_quantity:number,
+  product_id:number,
+}
+
+export interface Products {
+  id : number;
   name : string;
   price : number;
-  stock : number;
-  sales : number;
+  stock_quantity : number;
+  category:string;
+  // sales : number;
 }

@@ -6,14 +6,28 @@ inventory_bp = Blueprint('inventory', __name__, url_prefix='/inventory')
 
 @inventory_bp.route('/<int:user_id>', methods=['GET'])
 @jwt_required()
-def get_inventory(user_id):
+def get_inventory_route(user_id):
     claims = get_jwt()
     role_name = claims.get("role_name")
+    print(role_name)
 
-    if role_name not in ["Franchisor","Franchisee", "Admin"]:
-        return jsonify({"message": "Unauthorized"}), 403
+    # if role_name not in ["Franchisor","Franchisee", "Admin"]:
+    #     return jsonify({"message": "Unauthorized"}), 403
 
     response, status = inventory.get_inventory(user_id)
+    return jsonify(response), status
+
+@inventory_bp.route('/franchisee/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_inventory_route_franchisee(user_id):
+    claims = get_jwt()
+    role_name = claims.get("role_name")
+    print(role_name)
+
+    # if role_name not in ["Franchisor","Franchisee", "Admin"]:
+    #     return jsonify({"message": "Unauthorized"}), 403
+
+    response, status = inventory.get_inventory_franchisee(user_id)
     return jsonify(response), status
 
 @inventory_bp.route('/<int:product_id>', methods=['PUT'])
@@ -37,7 +51,7 @@ def get_stock_requests():
     claims = get_jwt()
     role_name = claims.get("role_name")
 
-    if role_name not in ["Franchisor", "Admin"]:
+    if role_name not in ["Franchisor","Franchisee", "Admin"]:
         return jsonify({"message": "Unauthorized"}), 403
 
     response, status = inventory.get_all_stock_requests()
@@ -49,6 +63,7 @@ def get_stock_requests():
 def approve_stock_request(request_id):
     claims = get_jwt()
     role_name = claims.get("role_name")
+    print(role_name)
 
     if role_name not in ["Franchisor", "Admin"]:
         return jsonify({"message": "Unauthorized"}), 403

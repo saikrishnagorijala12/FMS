@@ -35,6 +35,15 @@ user = {
   togglePasswordVisibility() {
     this.passwordVisible = !this.passwordVisible;
   }
+  get passwordCriteria() {
+    return {
+      length: this.user.password.length >= 8,
+      uppercase: /[A-Z]/.test(this.user.password),
+      lowercase: /[a-z]/.test(this.user.password),
+      number: /[0-9]/.test(this.user.password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(this.user.password),
+    };
+  }
 
   toggleConfirmPasswordVisibility() {
     this.confirmPasswordVisible = !this.confirmPasswordVisible;

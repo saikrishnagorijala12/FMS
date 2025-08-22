@@ -35,7 +35,7 @@ def get_orders():
     return jsonify(response), status
 
 
-@orders_bp.route('/<int:order_id>', methods=['GET'])
+@orders_bp.route('/order/<int:order_id>', methods=['GET'])
 @jwt_required()
 def get_order_by_id(order_id):
     claims = get_jwt()
@@ -43,6 +43,12 @@ def get_order_by_id(order_id):
     user_id = get_jwt_identity()
 
     response, status = orders.get_order_by_id(order_id, role_name, user_id)
+    return jsonify(response), status
+
+@orders_bp.route('/orders', methods=['GET'])
+@jwt_required()
+def get_all_order():
+    response, status = orders.all_order()
     return jsonify(response), status
 
 
